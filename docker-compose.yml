@@ -1,0 +1,175 @@
+networks:
+  dwh-net:
+    driver: bridge
+
+volumes:
+  namenode-data:
+  datanode1-data:
+  datanode2-data:
+  datanode3-data:
+  postgres-data:
+
+services:
+
+  # ─────────────────────────────────────────────
+  # HDFS NameNode — manages filesystem metadata
+  # Web UI: http://localhost:9870
+  # ─────────────────────────────────────────────
+  namenode:
+    image: bde2020/hadoop-namenode:2.0.0-hadoop3.2.1-java8
+    container_name: namenode
+    hostname: namenode
+    ports:
+      - "9870:9870"   # HDFS Web UI
+      - "8020:8020"   # RPC port — Spark connects here
+    environment:
+      CLUSTER_NAME: dwh-local
+    volumes:
+      - namenode-data:/hadoop/dfs/name
+    networks:
+      - dwh-net
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9870"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  # HDFS DataNodes — store actual file blocks
+  # 3 nodes to simulate replication (dfs.replication=3)
+  # ─────────────────────────────────────────────
+  datanode1:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode1
+    hostname: datanode1
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+      CORE_CONF_fs_defaultFS: hdfs://namenode:8020
+    volumes:
+      - datanode1-data:/hadoop/dfs/data
+    depends_on:
+      - namenode
+    networks:
+      - dwh-net
+
+  datanode2:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode2
+    hostname: datanode2
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+      CORE_CONF_fs_defaultFS: hdfs://namenode:8020
+    volumes:
+      - datanode2-data:/hadoop/dfs/data
+    depends_on:
+      - namenode
+    networks:
+      - dwh-net
+
+  datanode3:
+    image: bde2020/hadoop-datanode:2.0.0-hadoop3.2.1-java8
+    container_name: datanode3
+    hostname: datanode3
+    environment:
+      SERVICE_PRECONDITION: "namenode:9870"
+      CORE_CONF_fs_defaultFS: hdfs://namenode:8020
+    volumes:
+      - datanode3-data:/hadoop/dfs/data
+    depends_on:
+      - namenode
+    networks:
+      - dwh-net
+
+  # ─────────────────────────────────────────────
+  # PostgreSQL — backend storage for Hive Metastore
+  # Stores schema definitions, table metadata, partitions
+  # ─────────────────────────────────────────────
+  postgres:
+    image: postgres:15-alpine
+    container_name: postgres-hive
+    hostname: postgres
+    environment:
+      POSTGRES_DB: hive_metastore
+      POSTGRES_USER: hive
+      POSTGRES_PASSWORD: hive123
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks:
+      - dwh-net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hive -d hive_metastore"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ─────────────────────────────────────────────
+  # Hive Metastore — central catalog (Thrift API)
+  # Spark connects here to resolve table schemas
+  # Thrift port: localhost:9083
+  # ─────────────────────────────────────────────
+  hive-metastore:
+    build:
+      context: .
+      dockerfile: docker/hive/Dockerfile
+    container_name: hive-metastore
+    hostname: hive-metastore
+    environment:
+      # Tell the entrypoint script which service to start
+      SERVICE_NAME: metastore
+      # Tell schematool to use postgres dbType (default is derby)
+      DB_DRIVER: postgres
+      # Point default filesystem to the namenode container
+      FS_DEFAULT_NAME: hdfs://namenode:8020
+      # Load custom hive-site.xml from mounted directory
+      HIVE_CUSTOM_CONF_DIR: /hive-custom-conf
+    ports:
+      - "9083:9083"   # Thrift Metastore port
+    volumes:
+      # Override default Hive config with our hive-site.xml
+      - ./conf/hive-site.xml:/hive-custom-conf/hive-site.xml
+    depends_on:
+      postgres:
+        condition: service_healthy
+      namenode:
+        condition: service_healthy
+    networks:
+      - dwh-net
+
+  # ─────────────────────────────────────────────
+  # Spark — runs inside dwh-net so it can reach
+  # DataNodes by container hostname (no WSL2 NAT issues)
+  # Spark UI: http://localhost:4040
+  # ─────────────────────────────────────────────
+  spark:
+    build:
+      context: .
+      dockerfile: docker/spark/Dockerfile
+    container_name: spark
+    # Keep container alive — official spark image exits immediately without a command
+    command: tail -f /dev/null
+    environment:
+      SPARK_HOME: /opt/spark
+      # These are read by jobs/common/spark_session.py via os.getenv().
+      # Must use container hostnames — the spark container is inside dwh-net.
+      HDFS_HOST: namenode
+      HDFS_PORT: "8020"
+      HIVE_HOST: hive-metastore
+      HIVE_PORT: "9083"
+      SPARK_MASTER: local[*]
+      LOG_LEVEL: WARN
+      # HADOOP_USER_NAME tells the Hadoop client which HDFS user to authenticate as.
+      # "root" is the HDFS superuser in this dev cluster — bypasses permission checks.
+      # In production this would be replaced by Kerberos.
+      HADOOP_USER_NAME: root
+    volumes:
+      # Mount jobs and data so spark-submit can find them
+      - ./jobs:/opt/spark-apps/jobs
+      - ./data:/opt/spark-apps/data
+      - ./conf/spark-defaults.conf:/opt/spark/conf/spark-defaults.conf
+    ports:
+      - "4040:4040"   # Spark UI (active job)
+    depends_on:
+      - namenode
+      - hive-metastore
+    networks:
+      - dwh-net

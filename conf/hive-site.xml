@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<?xml-stylesheet type="text/xsl" href="configuration.xsl"?>
+<!--
+  hive-site.xml — Hive Metastore configuration
+  Mounted into container at: /hive-custom-conf/hive-site.xml
+
+  - javax.jdo.*                  : Hive Metastore -> PostgreSQL connection
+  - hive.metastore.warehouse.dir : root directory for managed tables on HDFS
+-->
+<configuration>
+
+  <!-- ── PostgreSQL backend ── -->
+  <property>
+    <name>javax.jdo.option.ConnectionURL</name>
+    <value>jdbc:postgresql://postgres:5432/hive_metastore</value>
+    <description>JDBC URL pointing to PostgreSQL running in the Docker network</description>
+  </property>
+
+  <property>
+    <name>javax.jdo.option.ConnectionDriverName</name>
+    <value>org.postgresql.Driver</value>
+  </property>
+
+  <property>
+    <name>javax.jdo.option.ConnectionUserName</name>
+    <value>hive</value>
+  </property>
+
+  <property>
+    <name>javax.jdo.option.ConnectionPassword</name>
+    <value>hive123</value>
+  </property>
+
+  <!-- ── Schema auto-creation on first run ── -->
+  <property>
+    <name>datanucleus.schema.autoCreateAll</name>
+    <value>true</value>
+    <description>Automatically create Hive schema in Postgres if it does not exist</description>
+  </property>
+
+  <property>
+    <name>hive.metastore.schema.verification</name>
+    <value>false</value>
+  </property>
+
+  <!-- ── HDFS warehouse directory ── -->
+  <property>
+    <name>hive.metastore.warehouse.dir</name>
+    <value>hdfs://namenode:8020/user/hive/warehouse</value>
+    <description>Root directory on HDFS where Hive stores managed table data</description>
+  </property>
+
+  <!-- ── Thrift server binding ── -->
+  <property>
+    <name>hive.metastore.uris</name>
+    <value>thrift://0.0.0.0:9083</value>
+  </property>
+
+</configuration>
