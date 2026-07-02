@@ -1,0 +1,21 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+
+# Environment — each developer has their own local config
+.env
+
+# Spark local warehouse (created when running pyspark locally)
+spark-warehouse/
+derby.log
+metastore_db/
+
+# IDE
+.idea/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
