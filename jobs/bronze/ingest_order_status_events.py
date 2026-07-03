@@ -2,26 +2,26 @@ import argparse
 import sys
 from pyspark.sql import functions as F
 from jobs.common.cli_utils import add_partition_date_arg
-from jobs.common.spark_session import create_spark_session
-from jobs.common.schema.bronze import ORDERS_SCHEMA
 from jobs.common.logging_utils import configure_logging
+from jobs.common.spark_session import create_spark_session
+from jobs.common.schema.bronze import ORDER_STATUS_EVENTS_SCHEMA
 
 
 # ── Constants ─────────────────────────────────────────────────────────────────
 LAYER         = "bronze"
-ENTITY        = "orders"
+ENTITY        = "order_status_events"
 HDFS_BASE     = f"/data/{LAYER}/{ENTITY}"
 HIVE_DATABASE = LAYER
 HIVE_TABLE    = f"{HIVE_DATABASE}.{ENTITY}"
 
 # ── Logging ───────────────────────────────────────────────────────────────────
-logger = configure_logging(layer=LAYER, entity=ENTITY)
+logger = configure_logging(layer=LAYER, entity=f"ingest_{ENTITY}")
 
 
 # ── Argument parsing ──────────────────────────────────────────────────────────
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
-        description="Ingest raw orders CSV into HDFS Bronze layer"
+        description="Ingest raw order status events CSV into HDFS Bronze layer"
     )
     parser.add_argument(
         "--source-path",
@@ -40,7 +40,7 @@ def read_source(spark, source_path: str):
         .option("header", "true")
         .option("nullValue", "")        # treat empty string as null
         .option("mode", "PERMISSIVE")   # log malformed rows instead of failing
-        .schema(ORDERS_SCHEMA)
+        .schema(ORDER_STATUS_EVENTS_SCHEMA)
         .csv(source_path)
     )
 
@@ -70,19 +70,11 @@ def register_hive_partition(spark, year: str, month: str, day: str, output_path:
 
     spark.sql(f"""
         CREATE TABLE IF NOT EXISTS {HIVE_TABLE} (
-            order_id        STRING,
-            order_date      STRING,
-            customer_id     STRING,
-            product_id      STRING,
-            store_id        STRING,
-            channel         STRING,
-            quantity        INT,
-            unit_price      DOUBLE,
-            discount_amount DOUBLE,
-            created_at      STRING,
-            updated_at      STRING,
-            _ingested_at    TIMESTAMP,
-            _source_file    STRING
+            order_id STRING,
+            status STRING,
+            created_at STRING,
+            _ingested_at TIMESTAMP,
+            _source_file STRING
         )
         PARTITIONED BY (year STRING, month STRING, day STRING)
         STORED AS PARQUET
@@ -117,9 +109,6 @@ def run(spark, source_path: str, partition_date: str) -> None:
 
 
 # ── Entry point ───────────────────────────────────────────────────────────────
-    spark.sql(f"CREATE DATABASE IF NOT EXISTS {HIVE_DATABASE}")
-
-    spa
 def main() -> None:
     args = parse_args()
     spark = create_spark_session(app_name=f"{LAYER}.ingest_{ENTITY}")
