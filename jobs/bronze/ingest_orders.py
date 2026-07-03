@@ -119,7 +119,6 @@ def run(spark, source_path: str, partition_date: str) -> None:
 # ── Entry point ───────────────────────────────────────────────────────────────
     spark.sql(f"CREATE DATABASE IF NOT EXISTS {HIVE_DATABASE}")
 
-    spa
 def main() -> None:
     args = parse_args()
     spark = create_spark_session(app_name=f"{LAYER}.ingest_{ENTITY}")
