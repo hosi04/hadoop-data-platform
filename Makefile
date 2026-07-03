@@ -68,6 +68,24 @@ ingest-orders:
 		--source-path file:///opt/spark-apps/data/sample/orders.csv \
 		--partition-date $(DATE)
 
+
+ingest-order-status-events:
+	docker exec -e PYTHONPATH=/opt/spark-apps spark \
+		/opt/spark/bin/spark-submit \
+		--master local[*] \
+		/opt/spark-apps/jobs/bronze/ingest_order_status_events.py \
+		--source-path file:///opt/spark-apps/data/sample/order_status_events.csv \
+		--partition-date $(DATE)
+
+
+clean-orders:
+	docker exec -e PYTHONPATH=/opt/spark-apps spark \
+		/opt/spark/bin/spark-submit \
+		--master local[*] \
+		/opt/spark-apps/jobs/silver/clean_orders.py \
+		--partition-date $(DATE)
+
+
 spark-shell:
 	docker exec -it -e PYTHONPATH=/opt/spark-apps spark \
 		/opt/spark/bin/pyspark --master local[*]
