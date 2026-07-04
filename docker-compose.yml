@@ -173,3 +173,23 @@ services:
       - hive-metastore
     networks:
       - dwh-net
+
+  # ─────────────────────────────────────────────
+  # Trino — SQL query engine, queries HDFS tables
+  # registered in Hive Metastore
+  # Web UI: http://localhost:8080
+  # ─────────────────────────────────────────────
+  trino:
+    image: trinodb/trino:455
+    container_name: trino
+    hostname: trino
+    environment:
+      HADOOP_USER_NAME: root
+    volumes:
+      - ./conf/trino/catalog:/etc/trino/catalog
+    ports:
+      - "8080:8080"   # Trino Web UI / CLI / JDBC
+    depends_on:
+      - hive-metastore
+    networks:
+      - dwh-net
