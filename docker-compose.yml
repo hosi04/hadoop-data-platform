@@ -8,6 +8,10 @@ volumes:
   datanode2-data:
   datanode3-data:
   postgres-data:
+  kafka-data:
+  clickhouse-data:
+  ch-ui-data:
+  metabase-data:
 
 services:
 
@@ -191,5 +195,102 @@ services:
       - "8080:8080"   # Trino Web UI / CLI / JDBC
     depends_on:
       - hive-metastore
+    networks:
+      - dwh-net
+
+  # ─────────────────────────────────────────────
+  # Kafka — streaming ingestion source (KRaft mode,
+  # single-node, no Zookeeper needed)
+  # Broker (in-network): kafka:9092
+  # Broker (from host): localhost:9094
+  # ─────────────────────────────────────────────
+  kafka:
+    image: apache/kafka:3.7.0
+    container_name: kafka
+    hostname: kafka
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://:9092,CONTROLLER://:9093,PLAINTEXT_HOST://:9094
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092,PLAINTEXT_HOST://localhost:9094
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_LOG_DIRS: /var/lib/kafka/data
+      CLUSTER_ID: 4L6g3nShT-eMCtK--X86sw
+    volumes:
+      - kafka-data:/var/lib/kafka/data
+    ports:
+      - "9094:9094"   # Kafka broker — reachable from host
+    networks:
+      - dwh-net
+
+  # ─────────────────────────────────────────────
+  # ClickHouse — OLAP serving layer for realtime
+  # dashboards (fed directly from Kafka)
+  # HTTP: http://localhost:8123
+  # Native TCP: localhost:9000
+  # ─────────────────────────────────────────────
+  clickhouse:
+    image: clickhouse/clickhouse-server:24.8
+    container_name: clickhouse
+    hostname: clickhouse
+    environment:
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: clickhouse
+    ulimits:
+      nofile:
+        soft: 262144
+        hard: 262144
+    volumes:
+      - clickhouse-data:/var/lib/clickhouse
+    ports:
+      - "8123:8123"   # HTTP interface
+      - "9000:9000"   # Native TCP client
+    networks:
+      - dwh-net
+
+  # ─────────────────────────────────────────────
+  # CH-UI — web UI for browsing/querying ClickHouse
+  # Web UI: http://localhost:36
+  # ─────────────────────────────────────────────
+  clickhouse-ui:
+    image: ghcr.io/caioricciuti/ch-ui:v2.0.23
+    container_name: clickhouse-ui
+    hostname: clickhouse-ui
+    ports:
+      - "0036:3488"
+    volumes:
+      - ch-ui-data:/app/data
+    environment:
+      CLICKHOUSE_URL: http://clickhouse:8123
+      CLICKHOUSE_USER: clickhouse
+      CLICKHOUSE_PASSWORD: clickhouse
+      CONNECTION_NAME: hadoop-data-platform
+    depends_on:
+      - clickhouse
+    networks:
+      - dwh-net
+
+  # ─────────────────────────────────────────────
+  # Metabase — BI dashboard tool
+  # Queries Trino (lake) and ClickHouse (speed layer)
+  # Web UI: http://localhost:3000
+  # ─────────────────────────────────────────────
+  metabase:
+    image: metabase/metabase:v0.50.8
+    container_name: metabase
+    hostname: metabase
+    environment:
+      MB_DB_FILE: /metabase-data/metabase.db
+    volumes:
+      - metabase-data:/metabase-data
+    ports:
+      - "3000:3000"
+    depends_on:
+      - trino
+      - clickhouse
     networks:
       - dwh-net
