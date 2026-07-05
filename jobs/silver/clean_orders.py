@@ -28,7 +28,7 @@ def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description="Clean and enrich orders into HDFS Silver layer"
     )
-    add_partition_date_arg(parser, required=True)
+    add_partition_date_arg(parser)
     return parser.parse_args()
 
 

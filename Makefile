@@ -3,7 +3,7 @@
 # Requires: make (Linux/macOS native, Windows via chocolatey or Git Bash)
 # ============================================================
 
-.PHONY: help up down down-clean ps logs build hdfs-setup hdfs-ls ingest-orders spark-shell
+.PHONY: help up down down-clean ps logs build hdfs-setup hdfs-ls ingest-orders ingest-order-status-events ingest-customers ingest-products clean-orders clean-customers clean-products spark-shell
 
 help:
 	@echo ""
@@ -22,8 +22,14 @@ help:
 	@echo "    make hdfs-ls path=<hdfs-path>  List HDFS directory"
 	@echo ""
 	@echo "  Spark Jobs (run inside spark container — avoids WSL2/Docker network issues)"
-	@echo "    make ingest-orders DATE=YYYY-MM-DD   Run Bronze orders ingestion"
-	@echo "    make spark-shell                     Open interactive PySpark shell"
+	@echo "    make ingest-orders DATE=YYYY-MM-DD               Run Bronze orders ingestion"
+	@echo "    make ingest-order-status-events DATE=YYYY-MM-DD  Run Bronze order status events ingestion"
+	@echo "    make ingest-customers                            Run Bronze customers ingestion (full snapshot)"
+	@echo "    make ingest-products                             Run Bronze products ingestion (full snapshot)"
+	@echo "    make clean-orders DATE=YYYY-MM-DD                Run Silver orders cleaning"
+	@echo "    make clean-customers                             Run Silver customers cleaning (full snapshot)"
+	@echo "    make clean-products                              Run Silver products cleaning (full snapshot)"
+	@echo "    make spark-shell                                 Open interactive PySpark shell"
 	@echo ""
 
 # ── Docker ────────────────────────────────────────────────────────────────────
@@ -58,9 +64,8 @@ hdfs-ls:
 # Jobs run inside the spark container (same Docker network as HDFS datanodes).
 # This avoids WSL2 → Docker NAT issues where DataNode internal IPs are unreachable.
 
-DATE ?= $(shell date +%Y-%m-%d)
-
 ingest-orders:
+	@test -n "$(DATE)" || (echo "ERROR: DATE is required, e.g. make ingest-orders DATE=2026-07-01" && exit 1)
 	docker exec -e PYTHONPATH=/opt/spark-apps spark \
 		/opt/spark/bin/spark-submit \
 		--master local[*] \
@@ -70,6 +75,7 @@ ingest-orders:
 
 
 ingest-order-status-events:
+	@test -n "$(DATE)" || (echo "ERROR: DATE is required, e.g. make ingest-order-status-events DATE=2026-07-01" && exit 1)
 	docker exec -e PYTHONPATH=/opt/spark-apps spark \
 		/opt/spark/bin/spark-submit \
 		--master local[*] \
@@ -78,12 +84,43 @@ ingest-order-status-events:
 		--partition-date $(DATE)
 
 
+ingest-customers:
+	docker exec -e PYTHONPATH=/opt/spark-apps spark \
+		/opt/spark/bin/spark-submit \
+		--master local[*] \
+		/opt/spark-apps/jobs/bronze/ingest_customers.py \
+		--source-path file:///opt/spark-apps/data/sample/customers.csv
+
+
+ingest-products:
+	docker exec -e PYTHONPATH=/opt/spark-apps spark \
+		/opt/spark/bin/spark-submit \
+		--master local[*] \
+		/opt/spark-apps/jobs/bronze/ingest_products.py \
+		--source-path file:///opt/spark-apps/data/sample/products.csv
+
+
 clean-orders:
+	@test -n "$(DATE)" || (echo "ERROR: DATE is required, e.g. make clean-orders DATE=2026-07-01" && exit 1)
 	docker exec -e PYTHONPATH=/opt/spark-apps spark \
 		/opt/spark/bin/spark-submit \
 		--master local[*] \
 		/opt/spark-apps/jobs/silver/clean_orders.py \
 		--partition-date $(DATE)
+
+
+clean-customers:
+	docker exec -e PYTHONPATH=/opt/spark-apps spark \
+		/opt/spark/bin/spark-submit \
+		--master local[*] \
+		/opt/spark-apps/jobs/silver/clean_customers.py
+
+
+clean-products:
+	docker exec -e PYTHONPATH=/opt/spark-apps spark \
+		/opt/spark/bin/spark-submit \
+		--master local[*] \
+		/opt/spark-apps/jobs/silver/clean_products.py
 
 
 spark-shell:
