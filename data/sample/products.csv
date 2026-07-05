@@ -1,0 +1,17 @@
+product_id,product_name,brand,category_l1,category_l2,category_l3,supplier,cost_price,created_at,updated_at
+PRD-SK-001,Hydrating Facial Toner,PureDerm,Skincare,Toner,Facial Toner,Supplier VN Co.,208000,2025-01-10 00:00:00,2025-01-10 00:00:00
+PRD-SK-007,Vitamin C Brightening Serum,GlowLab,Skincare,Serum,Vitamin C Serum,Global Beauty Supply,234000,2025-01-10 00:00:00,2025-01-10 00:00:00
+PRD-SK-015,Gel Cream Moisturizer,PureDerm,Skincare,Moisturizer,Gel Cream,Supplier VN Co.,292000,2025-01-10 00:00:00,2025-01-10 00:00:00
+PRD-SK-022,SPF50 Daily Sunscreen,NatureCare,Skincare,Sunscreen,SPF50 Sunscreen,K-Beauty Import Co.,442000,2025-02-01 00:00:00,2025-02-01 00:00:00
+PRD-SK-033,Foam Cleanser,GlowLab,Skincare,Cleanser,Foam Cleanser,Global Beauty Supply,266000,2025-02-01 00:00:00,2025-02-01 00:00:00
+PRD-SK-044,Retinol Renewal Serum,VitaGlow,Skincare,Serum,Retinol Serum,K-Beauty Import Co.,338000,2025-03-05 00:00:00,2025-03-05 00:00:00
+PRD-MU-003,Matte Lipstick,ColorPop,Makeup,Lipstick,Matte Lipstick,Global Beauty Supply,120000,2025-01-20 00:00:00,2025-01-20 00:00:00
+PRD-MU-008,Liquid Foundation,ColorPop,Makeup,Foundation,Liquid Foundation,Global Beauty Supply,94000,2025-01-20 00:00:00,2025-01-20 00:00:00
+PRD-MU-019,Waterproof Mascara,LashLine,Makeup,Mascara,Waterproof Mascara,Supplier VN Co.,62000,2025-02-14 00:00:00,2025-02-14 00:00:00
+PRD-MU-025,Gel Eyeliner,LashLine,Makeup,Eyeliner,Gel Eyeliner,Supplier VN Co.,57000,2025-02-14 00:00:00,2025-02-14 00:00:00
+PRD-HC-002,Anti-Hairloss Shampoo,SilkHair,Haircare,Shampoo,Anti-Hairloss Shampoo,K-Beauty Import Co.,179000,2025-01-05 00:00:00,2025-01-05 00:00:00
+PRD-HC-007,Repair Conditioner,SilkHair,Haircare,Conditioner,Repair Conditioner,K-Beauty Import Co.,78000,2025-01-05 00:00:00,2025-01-05 00:00:00
+PRD-HC-015,Deep Repair Hair Mask,SilkHair,Haircare,Hair Mask,Deep Repair Mask,K-Beauty Import Co.,127000,2025-01-05 00:00:00,2025-01-05 00:00:00
+PRD-BD-004,Whitening Body Lotion,NatureCare,Bodycare,Body Lotion,Whitening Lotion,Global Beauty Supply,247000,2025-03-10 00:00:00,2025-03-10 00:00:00
+PRD-BD-009,Moisturizing Body Wash,NatureCare,Bodycare,Body Wash,Moisturizing Body Wash,Global Beauty Supply,136000,2025-03-10 00:00:00,2025-03-10 00:00:00
+PRD-BD-011,Exfoliating Body Scrub,NatureCare,Bodycare,Body Scrub,Exfoliating Scrub,Global Beauty Supply,162000,2025-03-10 00:00:00,2025-03-10 00:00:00

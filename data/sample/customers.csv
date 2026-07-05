@@ -1,0 +1,13 @@
+customer_id,full_name,gender,date_of_birth,province,tier,acquisition_channel,created_at,updated_at
+CUS-10012,Nguyen Thi Lan,F,1992-03-15,Ho Chi Minh,Silver,Facebook Ads,2025-11-02 10:15:00,2025-11-02 10:15:00
+CUS-10045,Tran Van Minh,M,1988-07-22,Ho Chi Minh,Gold,Organic,2025-08-14 09:30:00,2025-08-14 09:30:00
+CUS-10067,Le Thi Huong,F,1995-01-09,Da Nang,Bronze,TikTok Ads,2026-02-20 14:05:00,2026-02-20 14:05:00
+CUS-10078,Pham Van Duc,M,1990-11-30,Ha Noi,Silver,Google Ads,2025-09-05 11:45:00,2025-09-05 11:45:00
+CUS-10089,Vo Thi Mai,F,1997-05-18,Ha Noi,VIP,Referral,2025-06-10 08:20:00,2025-06-10 08:20:00
+CUS-10156,Hoang Van An,M,1993-09-25,Ho Chi Minh,Bronze,Organic,2026-01-12 16:40:00,2026-01-12 16:40:00
+CUS-10189,Dang Thi Thu,F,1991-12-03,Hai Phong,Silver,Facebook Ads,2025-10-28 13:15:00,2025-10-28 13:15:00
+CUS-10234,Bui Van Hai,M,1989-04-11,Da Nang,Gold,Referral,2025-07-19 10:00:00,2025-07-19 10:00:00
+CUS-10301,Do Thi Ngoc,F,1994-08-07,Can Tho,Bronze,TikTok Ads,2026-03-01 09:50:00,2026-03-01 09:50:00
+CUS-10423,Ngo Van Phuc,M,1996-02-14,Ho Chi Minh,Silver,Google Ads,2026-04-05 15:25:00,2026-04-05 15:25:00
+CUS-10512,Ly Thi Kim,F,1992-06-28,Ha Noi,VIP,Organic,2025-05-15 12:10:00,2025-05-15 12:10:00
+CUS-10678,Truong Van Son,M,1998-10-19,Ho Chi Minh,Bronze,Referral,2026-05-22 17:00:00,2026-05-22 17:00:00
